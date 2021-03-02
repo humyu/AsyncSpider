@@ -9,9 +9,10 @@ from fake_useragent import UserAgent
 
 class QiubaiSpider:
     def __init__(self):
+        ua = UserAgent(verify_ssl=False)
         self.url_temp = "https://www.qiushibaike.com/text/page/{}/"
         self.headers = {
-            "User-Agent": UserAgent}
+            "User-Agent": ua.random}
 
     # url_list
     def get_url_list(self):
@@ -64,19 +65,23 @@ class QiubaiSpider:
         #     self.save_content_list(content_list)
 
         with ThreadPoolExecutor(max_workers=8) as t:
-            # for page in range(1, 15):
-            #     obj = t.submit(spider, page)
-            #     obj_list.append(obj)
             begin = time.time()
             url_list = self.get_url_list()
             html_str_list = []
             for url in url_list:
                 html_str = t.submit(self.parse_url, url)
                 html_str_list.append(html_str)
+            print("解析完毕")
+            content_list_list = []
             for future in as_completed(html_str_list):
-                data = future.result()
-                content_list = self.get_content_list(data)
-                self.save_content_list(content_list)
+                html_str = future.result()
+                content_list = t.submit(self.get_content_list, html_str)
+                content_list_list.append(content_list)
+            print("获取完毕")
+            for future in as_completed(content_list_list):
+                content_list = future.result()
+                t.submit(self.save_content_list, content_list)
+            print("保存完毕")
             times = time.time() - begin
             print(times)
 
