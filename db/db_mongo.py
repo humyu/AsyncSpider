@@ -5,9 +5,9 @@ from db import db_setting
 
 class DBMongo(object):
     def __init__(self):
-        # self.mongo_uri = db_setting.MONGO_COLLECTION
+        # self.mongo_uri = db_setting.MONGO_URI
         # self.mongo_db = db_setting.MONGO_DB
-        self.client = pymongo.MongoClient(db_setting.MONGO_COLLECTION)
+        self.client = pymongo.MongoClient(db_setting.MONGO_URI)
         self.db = self.client[db_setting.MONGO_DB]
 
     # def open_spider(self):
