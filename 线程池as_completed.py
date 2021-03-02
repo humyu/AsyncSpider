@@ -25,3 +25,6 @@ def main():
         for future in as_completed(obj_list):
             data = future.result()
             print(f"main: {data}")
+
+main()
+print("主线程结束")
