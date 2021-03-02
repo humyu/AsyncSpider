@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import requests
 from lxml import etree
 import json
 import aiohttp
 import asyncio
-import pymongo
+from db import db_mongo
 
 
 class QiubaiSpider:
@@ -26,7 +25,7 @@ class QiubaiSpider:
     # 使用with语句
     async def parse_url(self, url):
         async with aiohttp.ClientSession() as session:
-            async with await session.get(url,headers = self.headers) as response:
+            async with await session.get(url, headers=self.headers) as response:
                 result = await response.text()
                 return result
 
@@ -38,34 +37,39 @@ class QiubaiSpider:
         # 分组
         div_list = html.xpath("//div[@class='col1 old-style-col1']/div")
         for div in div_list:
-            item = {}
+            item = dict()
             item["author_img"] = div.xpath(".//div[@class='author clearfix']/a[@rel='nofollow']/img/@src")
-            item["author_img"] = item["author_img"][0] if len(item["author_img"])>0 else None
+            item["author_img"] = item["author_img"][0] if len(item["author_img"]) > 0 else None
             item["author_name"] = div.xpath(".//div[@class='author clearfix']/a[2]/h2/text()")
             item["author_name"] = item["author_name"][0].strip()
             item["author_gender"] = div.xpath(".//div[contains(@class,'articleGender')]/@class")
-            item["author_gender"] = item["author_gender"][0].split(" ")[-1].replace("Icon","") if len(item["author_gender"])>0 else None
+            item["author_gender"] = item["author_gender"][0].split(" ")[-1].replace("Icon", "") if len(
+                item["author_gender"]) > 0 else None
             item["author_age"] = div.xpath(".//div[contains(@class,'articleGender')]/text()")
-            item["author_age"] = item["author_age"][0] if len(item["author_age"])>0 else None
+            item["author_age"] = item["author_age"][0] if len(item["author_age"]) > 0 else None
             item["content"] = div.xpath(".//div[@class='content']/span[1]/text()")
             item["content"] = "".join(item["content"]).strip()
             item["content_href"] = div.xpath(".//a[@class='contentHerf']/@href")
             item["content_img"] = div.xpath(".//div[@class='thumb']/a/img/@src")
-            item["content_img"] = item["content_img"][0] if len(item["content_img"])>0 else None
-            item["god_cmt"] = div.xpath(".//a[@class='indexGodCmt']/div[@class='cmtMain']/div[@class='main-text']/text()")
-            item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"])>0 else None
+            item["content_img"] = item["content_img"][0] if len(item["content_img"]) > 0 else None
+            item["god_cmt"] = div.xpath(
+                ".//a[@class='indexGodCmt']/div[@class='cmtMain']/div[@class='main-text']/text()")
+            item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"]) > 0 else None
             content_list.append(item)
         return content_list
 
     # 使用回调函数保存数据
     def save_content_list(self, content_list):
-        # for i in content_list:
-        #     print(i)
         file_path = "糗事百科_协程爬虫.txt"
         with open(file_path, "a", encoding="utf-8") as f:
             for content in content_list.result():
                 f.write(json.dumps(content, ensure_ascii=False, indent=2))
                 f.write("\n")
+
+    # 使用回调函数保存数据
+    def save_to_db(self, content_list):
+        for content in content_list.result():
+            db_mongo.DBMongo().process_item(content)
 
     # 实现主要逻辑
     def main(self):
@@ -79,11 +83,12 @@ class QiubaiSpider:
             # 2.创建任务对象
             task = asyncio.ensure_future(c)
             # 使用回调函数保存数据
-            task.add_done_callback(self.save_content_list)
+            task.add_done_callback(self.save_to_db)
             tasks.append(task)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(asyncio.wait(tasks))
         print("end")
+
 
 if __name__ == '__main__':
     qiubai = QiubaiSpider()
