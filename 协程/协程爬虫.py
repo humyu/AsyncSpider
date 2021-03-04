@@ -10,7 +10,8 @@ class QiubaiSpider:
     def __init__(self):
         self.url_temp = "https://www.qiushibaike.com/text/page/{}/"
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36"}
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/86.0.4240.193 Safari/537.36"}
 
     # url_list
     def get_url_list(self):

@@ -3,7 +3,7 @@ import pymongo
 from db import db_setting
 
 
-class DBMongo(object):
+class DBMongo:
     def __init__(self):
         # self.mongo_uri = db_setting.MONGO_URI
         # self.mongo_db = db_setting.MONGO_DB
