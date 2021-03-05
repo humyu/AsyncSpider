@@ -14,9 +14,11 @@ class DBMongo:
     #     self.client = pymongo.MongoClient(self.mongo_uri)
     #     self.db = self.client[self.mongo_db]
 
+    # def close_spider(self):
+    #     self.client.close()
+
     def process_item(self, item):
         self.db[db_setting.MONGO_COLLECTION].insert(dict(item))
         return item
 
-    # def close_spider(self):
-    #     self.client.close()
+

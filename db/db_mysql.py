@@ -14,6 +14,13 @@ class DBMysql:
         self.db = pymysql.connect(self.host, self.user, self.password, self.database, charset='utf8', port=self.port)
         self.cursor = self.db.cursor()
 
+    # def open_spider(self):
+    #     self.db = pymysql.connect(self.host, self.user, self.password, self.database, charset='utf8', port=self.port)
+    #     self.cursor = self.db.cursor()
+
+    # def close_spider(self):
+    #     self.db.close()
+
     def process_item(self, item):
         data = dict(item)
         keys = ', '.join(data.keys())

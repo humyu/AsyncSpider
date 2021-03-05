@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
-
 import pymysql
-import requests
-from bs4 import BeautifulSoup
-import pickle
 import aiohttp
 import asyncio
 import time
 import random
 
 
-async def test_newip(ip_, url, ip_ok):
+async def test_new_ip(ip, url, ip_ok):
     """
     测试新爬取的 ip
-    :param ip_: 新爬取的 ip 列表
+    :param ip_: 新爬取的 ip
     :param url: 测试的网站
     :param ip_ok: 返回的结果列表
     :return:
@@ -22,21 +18,16 @@ async def test_newip(ip_, url, ip_ok):
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
     conn = aiohttp.TCPConnector(verify_ssl=False)
     async with aiohttp.ClientSession(connector=conn) as session:
-        print('正在测试ip: ' + ip_)
         try:
-            proxy_ip = 'http://' + ip_
+            proxy_ip = 'http://' + ip
             async with session.get(url=url, headers=headers, proxy=proxy_ip, timeout=15) as response:
                 if response.status == 200:
-                    print('代理可用: ' + ip_)
-                    ip_ok.append((ip_, 5))
-                else:
-                    print('请求响应码不合法 ' + ip_)
-        except:
-            ip_ok.append((ip_, 4))
-            print('代理请求失败', ip_)
+                    ip_ok.append((ip, 5))
+        finally:
+            ip_ok.append((ip, 4))
 
 
-async def test_mysqlip(ip_, url, ip_ok):
+async def test_mysql_ip(ip, url, ip_ok):
     """
     测试数据库里的ip
     :param ip_: 数据库里的 ip 列表
@@ -48,20 +39,15 @@ async def test_mysqlip(ip_, url, ip_ok):
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
     conn = aiohttp.TCPConnector(verify_ssl=False)
     async with aiohttp.ClientSession(connector=conn) as session:
-        print('正在测试ip: ' + ip_[0])
         try:
-            proxy_ip = 'http://' + ip_[0]
+            proxy_ip = 'http://' + ip[0]
             async with session.get(url=url, headers=headers, proxy=proxy_ip, timeout=15) as response:
                 if response.status == 200:
-                    print('ip可用: ' + ip_[0])
-                    new_score = 5 if ip_[1] == 5 else ip_[1] + 1
-                    ip_ok.append((ip_[0], new_score))
-                else:
-                    print('请求响应码不合法 ' + ip_[0])
-        except:
-            new_score = 0 if ip_[1] == 0 else ip_[1] - 1
-            ip_ok.append((ip_[0], new_score))
-            print('代理请求失败', ip_[0])
+                    new_score = 5 if ip[1] == 5 else ip[1] + 1
+                    ip_ok.append((ip[0], new_score))
+        finally:
+            new_score = 0 if ip[1] == 0 else ip[1] - 1
+            ip_ok.append((ip[0], new_score))
 
 
 def get_mysqlip():
@@ -179,7 +165,7 @@ def insret_mysqlip(urls):
         loop = asyncio.get_event_loop()
         for i in range(0, len(ip_list), 10):
             proxies_ip = ip_list[i: i + 10]
-            tasks = [test_newip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
+            tasks = [test_new_ip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
             loop.run_until_complete(asyncio.wait(tasks))
             time.sleep(3)
     except Exception as err:
@@ -202,7 +188,7 @@ def update_mysqlip(urls):
         loop = asyncio.get_event_loop()
         for i in range(0, len(ip_list), 10):
             proxies_ip = ip_list[i: i + 10]
-            tasks = [test_mysqlip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
+            tasks = [test_mysql_ip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
             loop.run_until_complete(asyncio.wait(tasks))
             time.sleep(3)
     except Exception as err:

@@ -7,6 +7,18 @@ import tesserocr
 from PIL import Image
 import requests
 from db import db_mysql
+import json
+
+proxy_url = "https://proxy.mimvp.com/freesecret"
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/86.0.4240.193 Safari/537.36"}
+
+
+async def parse_img(url):
+    response = requests.get(url, headers=headers)
+    return response.content.decode()
 
 
 async def parse_url(url):
@@ -18,25 +30,17 @@ async def parse_url(url):
             return page_text
 
 
-# headers = {
-#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-#                   "Chrome/86.0.4240.193 Safari/537.36"}
-#
-# def parse_url(url):
-#     response = requests.get(url, headers=headers)
-#     return response.content.decode()
-
-def img_recognition(url):
-    r = requests.get(url)
+async def img_recognition(url):
+    r = await parse_img(url)
     with open('img.png', 'wb') as f:
-        f.write(r.content)
+        f.write(r)
     image = Image.open("img.png")
     result = tesserocr.image_to_text(image).strip()
     return result
 
 
-def parse(t):
-    page_text = t.result()
+async def parse(url):
+    page_text = await parse_url(url)
     tree = etree.HTML(page_text)
     tr_list = tree.xpath("//div[@class='free-content']/table[@class='mimvp-tbl free-proxylist-tbl']/tbody/tr")
     proxy_list = []
@@ -49,7 +53,6 @@ def parse(t):
         port = img_recognition(port_url)
         proxy_str = ip + ":" + port
         proxy_list.append(proxy_str)
-    # print(proxy_list)
     return proxy_list
 
 
@@ -59,6 +62,14 @@ def save_to_mysql(proxy_list):
         db_mysql.DBMysql().process_item(item)
 
 
+def save_to_file(proxy_list):
+    file_path = "ip_in_file.txt"
+    with open(file_path, "a", encoding="utf-8") as f:
+        for content in proxy_list:
+            f.write(json.dumps(content, ensure_ascii=False, indent=2))
+            f.write("\n")
+
+
 if __name__ == "__main__":
     start = time.time()
     proxy_url = "https://proxy.mimvp.com/freesecret"
@@ -66,7 +77,7 @@ if __name__ == "__main__":
     c = parse_url(proxy_url)
     # 2.创建任务对象
     task = asyncio.ensure_future(c)
-    task.add_done_callback(parse)
+    task.add_done_callback(save_to_file)
     # 3.创建事件循环对象
     loop = asyncio.get_event_loop()
     # 4.将任务对象注册到事件循环中且开启事件循环
