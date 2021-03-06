@@ -19,6 +19,6 @@ class DBMongo:
 
     def process_item(self, item):
         self.db[db_setting.MONGO_COLLECTION].insert(dict(item))
-        return item
-
+        self.client.close()
+        # return item
 

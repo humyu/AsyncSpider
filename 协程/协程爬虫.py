@@ -3,11 +3,12 @@ from lxml import etree
 import json
 import aiohttp
 import asyncio
-from setting import db_mongo
+from setting.db_mongo import DBMongo
 
 
 class QiubaiSpider:
     def __init__(self):
+        self.db_mongo = DBMongo()
         self.url_temp = "https://www.qiushibaike.com/text/page/{}/"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -70,7 +71,7 @@ class QiubaiSpider:
     # 使用回调函数保存数据
     def save_to_db(self, content_list):
         for content in content_list.result():
-            db_mongo.DBMongo().process_item(content)
+            self.db_mongo.process_item(content)
 
     # 实现主要逻辑
     def main(self):
