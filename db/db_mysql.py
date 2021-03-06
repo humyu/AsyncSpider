@@ -28,4 +28,5 @@ class DBMysql:
         sql = 'insert into % s (% s) values (% s)' % (self.table, keys, values)
         self.cursor.execute(sql, tuple(data.values()))
         self.db.commit()
-        return item
+        self.db.close()
+        # return item

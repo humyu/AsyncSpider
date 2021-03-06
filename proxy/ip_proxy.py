@@ -6,19 +6,18 @@ from lxml import etree
 import tesserocr
 from PIL import Image
 import requests
-from db import db_mysql
-import json
+from db.db_mysql import DBMysql
 
-proxy_url = "https://proxy.mimvp.com/freesecret"
+# db_mysql = DBMysql()
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/86.0.4240.193 Safari/537.36"}
 
 
-async def parse_img(url):
+def parse_img(url):
     response = requests.get(url, headers=headers)
-    return response.content.decode()
+    return response.content
 
 
 async def parse_url(url):
@@ -30,8 +29,8 @@ async def parse_url(url):
             return page_text
 
 
-async def img_recognition(url):
-    r = await parse_img(url)
+def img_recognition(url):
+    r = parse_img(url)
     with open('img.png', 'wb') as f:
         f.write(r)
     image = Image.open("img.png")
@@ -56,17 +55,17 @@ async def parse(url):
     return proxy_list
 
 
-def save_to_mysql(proxy_list):
-    for proxy in proxy_list.result():
-        item = {"proxy": proxy}
-        db_mysql.DBMysql().process_item(item)
+# def save_to_mysql(proxy_list):
+#     for proxy in proxy_list.result():
+#         item = {"proxy": proxy}
+#         db_mysql.process_item(item)
 
 
 def save_to_file(proxy_list):
     file_path = "ip_in_file.txt"
-    with open(file_path, "a", encoding="utf-8") as f:
-        for content in proxy_list:
-            f.write(json.dumps(content, ensure_ascii=False, indent=2))
+    with open(file_path, "w+", encoding="utf-8") as f:
+        for content in proxy_list.result():
+            f.write(content)
             f.write("\n")
 
 
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     start = time.time()
     proxy_url = "https://proxy.mimvp.com/freesecret"
     # 1.创建协程对象
-    c = parse_url(proxy_url)
+    c = parse(proxy_url)
     # 2.创建任务对象
     task = asyncio.ensure_future(c)
     task.add_done_callback(save_to_file)

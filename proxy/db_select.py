@@ -6,14 +6,7 @@ import time
 import random
 
 
-async def test_new_ip(ip, url, ip_ok):
-    """
-    测试新爬取的 ip
-    :param ip_: 新爬取的 ip
-    :param url: 测试的网站
-    :param ip_ok: 返回的结果列表
-    :return:
-    """
+async def test_new_ip(ip, url, ips_ok):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
     conn = aiohttp.TCPConnector(verify_ssl=False)
@@ -22,19 +15,12 @@ async def test_new_ip(ip, url, ip_ok):
             proxy_ip = 'http://' + ip
             async with session.get(url=url, headers=headers, proxy=proxy_ip, timeout=15) as response:
                 if response.status == 200:
-                    ip_ok.append((ip, 5))
-        finally:
-            ip_ok.append((ip, 4))
+                    ips_ok.append((ip, 5))
+        except:
+            ips_ok.append((ip, 4))
 
 
-async def test_mysql_ip(ip, url, ip_ok):
-    """
-    测试数据库里的ip
-    :param ip_: 数据库里的 ip 列表
-    :param url: 测试的网站
-    :param ip_ok: 返回的结果列表
-    :return:
-    """
+async def test_mysql_ip(ip, url, ips_ok):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
     conn = aiohttp.TCPConnector(verify_ssl=False)
@@ -44,13 +30,13 @@ async def test_mysql_ip(ip, url, ip_ok):
             async with session.get(url=url, headers=headers, proxy=proxy_ip, timeout=15) as response:
                 if response.status == 200:
                     new_score = 5 if ip[1] == 5 else ip[1] + 1
-                    ip_ok.append((ip[0], new_score))
+                    ips_ok.append((ip[0], new_score))
         finally:
             new_score = 0 if ip[1] == 0 else ip[1] - 1
-            ip_ok.append((ip[0], new_score))
+            ips_ok.append((ip[0], new_score))
 
 
-def get_mysqlip():
+def get_mysql_ip():
     """
     获取数据库里的 ip
     :return:
@@ -68,7 +54,7 @@ def get_mysqlip():
         print(err)
 
 
-def update_ipscore(ip_list):
+def update_score(ip_list):
     """
     更新数据库里的 ip 的分数
     :param ip_list:
@@ -104,7 +90,7 @@ def delete_ip():
     db.close()
 
 
-def delete_ideticalip():
+def delete_duplicate_ip():
     """
     去重
     :return:
@@ -147,54 +133,52 @@ def insert_ip(ip_list):
     db.close()
 
 
-def insret_mysqlip(urls):
+def insert_mysql_ip(test_url):
     """
     ip 爬取、测试、插入一体化函数
     :param urls:
     :return:
     """
-    ip_list1 = get_66ip()
-    ip_list2 = get_kaixinip()
-    ip_list3 = get_goubanjiaip()
-    ip_list = list(set(ip_list1 + ip_list2 + ip_list3))
+    ips = get_mysql_ip()
+    ip_list = list(set(ips))
     print('已做去重处理!')
 
-    ip_ok = []
+    ips_ok = []
     print('开始测试新爬取的ip: ')
     try:
         loop = asyncio.get_event_loop()
         for i in range(0, len(ip_list), 10):
             proxies_ip = ip_list[i: i + 10]
-            tasks = [test_new_ip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
+            tasks = [test_new_ip(proxy_ip, test_url, ips_ok) for proxy_ip in proxies_ip]
             loop.run_until_complete(asyncio.wait(tasks))
             time.sleep(3)
     except Exception as err:
         print('发生错误:', err.args)
 
-    insert_ip(ip_ok)
+    insert_ip(ips_ok)
     print('数据保存完毕!')
 
 
-def update_mysqlip(urls):
+def update_mysql_ip(test_url):
     """
     ip 更新、去零、去重一体化函数
     :param urls:
     :return:
     """
-    ip_list = get_mysqlip()
-    ip_ok = []
+    ip_list = get_mysql_ip()
+    ips_ok = []
     print('开始测试新爬取的ip: ')
     try:
         loop = asyncio.get_event_loop()
         for i in range(0, len(ip_list), 10):
             proxies_ip = ip_list[i: i + 10]
-            tasks = [test_mysql_ip(proxy_ip, random.choice(urls), ip_ok) for proxy_ip in proxies_ip]
+            tasks = [test_mysql_ip(proxy_ip, test_url, ips_ok) for proxy_ip in proxies_ip]
             loop.run_until_complete(asyncio.wait(tasks))
             time.sleep(3)
     except Exception as err:
         print('发生错误:', err.args)
 
-    update_ipscore(ip_ok)
+    update_score(ips_ok)
 
 
 print('数据更新完毕!')
@@ -202,18 +186,10 @@ print('数据更新完毕!')
 delete_ip()
 print('已删除score为0的ip!')
 
-delete_ideticalip()
+delete_duplicate_ip()
 print('已做去重处理!')
 
 if __name__ == '__main__':
-    urls = ['https://blog.csdn.net/qq_42730750/article/details/107868879',
-            'https://blog.csdn.net/qq_42730750/article/details/107931738',
-            'https://blog.csdn.net/qq_42730750/article/details/107869022',
-            'https://blog.csdn.net/qq_42730750/article/details/108016855',
-            'https://blog.csdn.net/qq_42730750/article/details/107703589',
-            'https://blog.csdn.net/qq_42730750/article/details/107869233',
-            'https://blog.csdn.net/qq_42730750/article/details/107869944',
-            'https://blog.csdn.net/qq_42730750/article/details/107919690']
-
-    insret_mysqlip(urls)
-    update_mysqlip(urls)
+    test_url = "http://httpbin.org/get"
+    insert_mysql_ip(test_url)
+    update_mysql_ip(test_url)
