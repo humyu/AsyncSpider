@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pymysql
-from db import db_setting
+from setting import db_setting
 
 
 class DBMysql:
@@ -15,11 +15,11 @@ class DBMysql:
         self.cursor = self.db.cursor()
 
     # def open_spider(self):
-    #     self.db = pymysql.connect(self.host, self.user, self.password, self.database, charset='utf8', port=self.port)
-    #     self.cursor = self.db.cursor()
+    #     self.setting = pymysql.connect(self.host, self.user, self.password, self.database, charset='utf8', port=self.port)
+    #     self.cursor = self.setting.cursor()
 
     # def close_spider(self):
-    #     self.db.close()
+    #     self.setting.close()
 
     def process_item(self, item):
         data = dict(item)

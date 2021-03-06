@@ -3,7 +3,7 @@ from lxml import etree
 import json
 import aiohttp
 import asyncio
-from db import db_mongo
+from setting import db_mongo
 
 
 class QiubaiSpider:

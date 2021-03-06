@@ -6,7 +6,7 @@ from lxml import etree
 import tesserocr
 from PIL import Image
 import requests
-from db.db_mysql import DBMysql
+from setting import db_mysql
 
 # db_mysql = DBMysql()
 

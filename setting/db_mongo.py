@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pymongo
-from db import db_setting
+from setting import db_setting
 
 
 class DBMongo:
@@ -12,7 +12,7 @@ class DBMongo:
 
     # def open_spider(self):
     #     self.client = pymongo.MongoClient(self.mongo_uri)
-    #     self.db = self.client[self.mongo_db]
+    #     self.setting = self.client[self.mongo_db]
 
     # def close_spider(self):
     #     self.client.close()
