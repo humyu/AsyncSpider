@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-from lxml import etree
-import json
 import aiohttp
 import asyncio
+import json
+from lxml import etree
+import sys
+
+sys.path.append("..")
 from setting.db_mongo import DBMongo
 
 
@@ -61,7 +64,7 @@ class QiubaiSpider:
         return content_list
 
     # 使用回调函数保存数据
-    def save_content_list(self, content_list):
+    def save_to_file(self, content_list):
         file_path = "糗事百科_协程爬虫.txt"
         with open(file_path, "a", encoding="utf-8") as f:
             for content in content_list.result():
@@ -85,7 +88,7 @@ class QiubaiSpider:
             # 2.创建任务对象
             task = asyncio.ensure_future(c)
             # 使用回调函数保存数据
-            task.add_done_callback(self.save_to_db)
+            task.add_done_callback(self.save_to_file)
             tasks.append(task)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(asyncio.wait(tasks))
