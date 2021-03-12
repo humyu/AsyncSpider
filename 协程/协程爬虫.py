@@ -61,18 +61,18 @@ class QiubaiSpider:
                 ".//a[@class='indexGodCmt']/div[@class='cmtMain']/div[@class='main-text']/text()")
             item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"]) > 0 else None
             content_list.append(item)
-        return content_list
+        await self.save_to_file(content_list)
 
     # 使用回调函数保存数据
-    def save_to_file(self, content_list):
+    async def save_to_file(self, content_list):
         file_path = "糗事百科_协程爬虫.txt"
         with open(file_path, "a", encoding="utf-8") as f:
-            for content in content_list.result():
+            for content in content_list:
                 f.write(json.dumps(content, ensure_ascii=False, indent=2))
                 f.write("\n")
 
     # 使用回调函数保存数据
-    def save_to_db(self, content_list):
+    async def save_to_db(self, content_list):
         for content in content_list.result():
             self.db_mongo.process_item(content)
 
@@ -87,8 +87,6 @@ class QiubaiSpider:
             c = self.get_content_list(url)
             # 2.创建任务对象
             task = asyncio.ensure_future(c)
-            # 使用回调函数保存数据
-            task.add_done_callback(self.save_to_file)
             tasks.append(task)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(asyncio.wait(tasks))

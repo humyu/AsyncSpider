@@ -63,8 +63,6 @@ class ProcessSpider():
     # 保存
     def save_content_list(self):
         while True:
-            # for i in content_list:
-            #     print(i)
             content_list = self.content_queue.get()
             file_path = "糗事百科_多进程2.txt"
             with open(file_path, "a", encoding="utf-8") as f:
@@ -83,20 +81,10 @@ class ProcessSpider():
         process_list.append(process3)
         process4 = Process(target=self.save_content_list,args=())
         process_list.append(process4)
-        # process1.start()
-        # process2.start()
-        # process3.start()
-        # process4.start()
         for p in process_list:
             p.daemon = True
             p.start()
         process1.join()
-        # for p in [process1,process2,process3,process4]:
-        #     p.join()
-        # process1.join()
-        # process2.join()
-        # process3.join()
-        # process4.join()
         for q in [self.url_queue, self.html_queue, self.content_queue]:
             q.join()
         print("主进程结束")

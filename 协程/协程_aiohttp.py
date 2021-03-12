@@ -23,7 +23,7 @@ async def get_w(rul):
 
 
 async def request():
-    url = 'http://127.0.0.1:5000'
+    url = 'http://httpbin.org/get'
     print('Waiting fro ', url)
     result = await get(url)
     # result = await get_w(url)
