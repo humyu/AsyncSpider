@@ -12,6 +12,7 @@ urls = [
 async def get_request(url):
     print("正在请求的url:", url)
     time.sleep(2)  # （堵塞操作2秒）出现了不支持异步模块的对象所以耗时6秒未成功进行异步操作
+    # await asyncio.sleep(2)  # 支持异步操作
     print("请求结束:", url)
 
 

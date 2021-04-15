@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import aiohttp
 import time
+
+import aiohttp
 from aiomultiprocess import Pool
 
-start = time.time()
 
+"""
+aiomultiprocess:aiomultiprocess 将异步 IO 和多进程结合起来了，很好的利用了多核和异步 IO 的优势
+"""
 
 async def get(url):
     session = aiohttp.ClientSession()
@@ -23,10 +26,12 @@ async def request():
         return result
 
 
-coroutine = request()
-task = asyncio.ensure_future(coroutine)
-loop = asyncio.get_event_loop()
-loop.run_until_complete(task)
+if __name__ == '__main__':
+    start = time.time()
+    coroutine = request()
+    task = asyncio.ensure_future(coroutine)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(task)
 
-end = time.time()
-print('Cost time:', end - start)
+    end = time.time()
+    print('Cost time:', end - start)

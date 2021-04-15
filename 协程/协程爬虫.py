@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import aiohttp
 import asyncio
 import json
-from lxml import etree
 import sys
+
+import aiofiles
+import aiohttp
 
 sys.path.append("..")
 from setting.db_mongo import DBMongo
@@ -19,12 +20,7 @@ class QiubaiSpider:
 
     # url_list
     def get_url_list(self):
-        return [self.url_temp.format(i) for i in range(1, 3)]
-
-    # # 发送请求，获取响应
-    # def parse_url(self, url):
-    #     response = requests.get(url, headers=self.headers)
-    #     return response.content.decode()
+        return [self.url_temp.format(i) for i in range(1, 6)]
 
     # 发送请求，获取响应
     # 使用with语句
@@ -36,42 +32,46 @@ class QiubaiSpider:
 
     # 提取数据
     async def get_content_list(self, url):
+        print(f"开始 {url}")
         html_str = await self.parse_url(url)
-        html = etree.HTML(html_str)
-        content_list = []
-        # 分组
-        div_list = html.xpath("//div[@class='col1 old-style-col1']/div")
-        for div in div_list:
-            item = dict()
-            item["author_img"] = div.xpath(".//div[@class='author clearfix']/a[@rel='nofollow']/img/@src")
-            item["author_img"] = item["author_img"][0] if len(item["author_img"]) > 0 else None
-            item["author_name"] = div.xpath(".//div[@class='author clearfix']/a[2]/h2/text()")
-            item["author_name"] = item["author_name"][0].strip()
-            item["author_gender"] = div.xpath(".//div[contains(@class,'articleGender')]/@class")
-            item["author_gender"] = item["author_gender"][0].split(" ")[-1].replace("Icon", "") if len(
-                item["author_gender"]) > 0 else None
-            item["author_age"] = div.xpath(".//div[contains(@class,'articleGender')]/text()")
-            item["author_age"] = item["author_age"][0] if len(item["author_age"]) > 0 else None
-            item["content"] = div.xpath(".//div[@class='content']/span[1]/text()")
-            item["content"] = "".join(item["content"]).strip()
-            item["content_href"] = div.xpath(".//a[@class='contentHerf']/@href")
-            item["content_img"] = div.xpath(".//div[@class='thumb']/a/img/@src")
-            item["content_img"] = item["content_img"][0] if len(item["content_img"]) > 0 else None
-            item["god_cmt"] = div.xpath(
-                ".//a[@class='indexGodCmt']/div[@class='cmtMain']/div[@class='main-text']/text()")
-            item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"]) > 0 else None
-            content_list.append(item)
+        # html = etree.HTML(html_str)
+        # content_list = []
+        # # 分组
+        # div_list = html.xpath("//div[@class='col1 old-style-col1']/div")
+        # for div in div_list:
+        #     item = dict()
+        #     item["author_img"] = div.xpath(".//div[@class='author clearfix']/a[@rel='nofollow']/img/@src")
+        #     item["author_img"] = item["author_img"][0] if len(item["author_img"]) > 0 else None
+        #     item["author_name"] = div.xpath(".//div[@class='author clearfix']/a[2]/h2/text()")
+        #     item["author_name"] = item["author_name"][0].strip()
+        #     item["author_gender"] = div.xpath(".//div[contains(@class,'articleGender')]/@class")
+        #     item["author_gender"] = item["author_gender"][0].split(" ")[-1].replace("Icon", "") if len(
+        #         item["author_gender"]) > 0 else None
+        #     item["author_age"] = div.xpath(".//div[contains(@class,'articleGender')]/text()")
+        #     item["author_age"] = item["author_age"][0] if len(item["author_age"]) > 0 else None
+        #     item["content"] = div.xpath(".//div[@class='content']/span[1]/text()")
+        #     item["content"] = "".join(item["content"]).strip()
+        #     item["content_href"] = div.xpath(".//a[@class='contentHerf']/@href")
+        #     item["content_img"] = div.xpath(".//div[@class='thumb']/a/img/@src")
+        #     item["content_img"] = item["content_img"][0] if len(item["content_img"]) > 0 else None
+        #     item["god_cmt"] = div.xpath(
+        #         ".//a[@class='indexGodCmt']/div[@class='cmtMain']/div[@class='main-text']/text()")
+        #     item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"]) > 0 else None
+        #     content_list.append(item)
+        print(f"准备保存 {url}")
+        content_list = [str(i) for i in range(20)]
         await self.save_to_file(content_list)
+        await asyncio.sleep(2)
+        print(f"保存 {url}")
 
     # 使用回调函数保存数据
     async def save_to_file(self, content_list):
         file_path = "糗事百科_协程爬虫.txt"
-        with open(file_path, "a", encoding="utf-8") as f:
+        async with aiofiles.open(file_path, "a", encoding="utf-8") as f:
             for content in content_list:
-                f.write(json.dumps(content, ensure_ascii=False, indent=2))
-                f.write("\n")
+                await f.write(json.dumps(content, ensure_ascii=False, indent=2))
+                await f.write("\n")
 
-    # 使用回调函数保存数据
     async def save_to_db(self, content_list):
         for content in content_list.result():
             self.db_mongo.process_item(content)
