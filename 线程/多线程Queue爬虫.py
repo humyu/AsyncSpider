@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-import requests
-from lxml import etree
+"""
+1. 使用 threading模块中的 Thread类 创建线程
+2. 数据结构：队列
+"""
 import json
 import threading
-from queue import Queue
 import time
+from queue import Queue
+
+import requests
+from lxml import etree
 
 
 class QiubaiSpider:
@@ -62,7 +67,7 @@ class QiubaiSpider:
             #     print(i)
             content_list = self.content_queue.get()
             file_path = "糗事百科_多线程.txt"
-            with open(file_path, "a", encoding="utf-8") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 for content in content_list:
                     f.write(json.dumps(content, ensure_ascii=False, indent=2))
                     f.write("\n")
@@ -70,22 +75,23 @@ class QiubaiSpider:
 
     # 实现主要逻辑
     def run(self):
-        begin = time.time()
         thread_list = []
         # 1.url_list
         t_url = threading.Thread(target=self.get_url_list)
         thread_list.append(t_url)
         # 2.遍历，发送请求，获取响应
         # 多设置几个线程
-        for i in range(3):
+        for i in range(4):
             t_parse = threading.Thread(target=self.parse_url)
             thread_list.append(t_parse)
         # 3.提取数据
         t_html = threading.Thread(target=self.get_content_list)
         thread_list.append(t_html)
         # 4.保存
-        t_save = threading.Thread(target=self.save_content_list)
-        thread_list.append(t_save)
+        for i in range(10):
+            t_save = threading.Thread(target=self.save_content_list)
+            thread_list.append(t_save)
+
         for t in thread_list:
             # 把子线程设置为守护线程，即当主线程结束时，子线程结束。必须在start()之前设置
             t.setDaemon(True)
@@ -95,11 +101,11 @@ class QiubaiSpider:
             # 等到队列为空，再执行别的操作
             q.join()
 
-        print("主线程结束")
-        times = time.time() - begin
-        print(times)
-
 
 if __name__ == '__main__':
+    begin = time.time()
     qiubai = QiubaiSpider()
     qiubai.run()
+    print("主线程结束")
+    times = time.time() - begin
+    print(times)

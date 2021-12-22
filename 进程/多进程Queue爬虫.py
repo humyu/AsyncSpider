@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-from multiprocessing import Process,JoinableQueue
+"""
+multiprocessing 模块的 Process 类 创建子进程
+multiprocessing 模块的 Process 类 作为进程间的通信
+"""
+import json
+from multiprocessing import Process, Queue
+import time
+
 import requests
 from lxml import etree
-import json
 
 
 class ProcessSpider():
@@ -12,27 +18,35 @@ class ProcessSpider():
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/86.0.4240.193 Safari/537.36"}
-        self.url_queue = JoinableQueue()
-        self.html_queue = JoinableQueue()
-        self.content_queue = JoinableQueue()
+        self.url_queue = Queue()
+        self.html_queue = Queue()
+        self.content_queue = Queue()
 
     # url_list
     def get_url_list(self):
-        for i in range(1, 3):
+        for i in range(1, 5):
             self.url_queue.put(self.url_temp.format(i))
+            print("生产%s馒头" % i)
+        self.url_queue.put(None)
 
     # 发送请求，获取响应
     def parse_url(self):
         while True:
             url = self.url_queue.get()
+            if url is None:
+                break
+            print("消费%s馒头" % url)
             response = requests.get(url, headers=self.headers)
             self.html_queue.put(response.content.decode())
-            self.url_queue.task_done()
+        self.html_queue.put(None)
 
     # 提取数据
     def get_content_list(self):
         while True:
             html_str = self.html_queue.get()
+            if html_str is None:
+                print("提取完毕")
+                break
             html = etree.HTML(html_str)
             content_list = []
             # 分组
@@ -58,38 +72,42 @@ class ProcessSpider():
                 item["god_cmt"] = item["god_cmt"][0].strip() if len(item["god_cmt"]) > 0 else None
                 content_list.append(item)
             self.content_queue.put(content_list)
-            self.html_queue.task_done()
+        self.content_queue.put(None)
 
     # 保存
     def save_content_list(self):
         while True:
+            # for i in content_list:
+            #     print(i)
             content_list = self.content_queue.get()
-            file_path = "糗事百科_多进程2.txt"
+            if content_list is None:
+                print("保存完毕")
+                break
+            file_path = "糗事百科_多进程.txt"
             with open(file_path, "a", encoding="utf-8") as f:
                 for content in content_list:
                     f.write(json.dumps(content, ensure_ascii=False, indent=2))
                     f.write("\n")
-            self.content_queue.task_done()
 
     def run(self):
-        process_list = []
-        process1 = Process(target=self.get_url_list,args=())
-        process_list.append(process1)
-        process2 = Process(target=self.parse_url,args=())
-        process_list.append(process2)
-        process3 = Process(target=self.get_content_list,args=())
-        process_list.append(process3)
-        process4 = Process(target=self.save_content_list,args=())
-        process_list.append(process4)
-        for p in process_list:
-            p.daemon = True
-            p.start()
+        process1 = Process(target=self.get_url_list, args=())
+        process2 = Process(target=self.parse_url, args=())
+        process3 = Process(target=self.get_content_list, args=())
+        process4 = Process(target=self.save_content_list, args=())
+        process1.start()
+        process2.start()
+        process3.start()
+        process4.start()
         process1.join()
-        for q in [self.url_queue, self.html_queue, self.content_queue]:
-            q.join()
-        print("主进程结束")
+        process2.join()
+        process3.join()
+        process4.join()
 
 
 if __name__ == '__main__':
+    begin = time.time()
     spider = ProcessSpider()
     spider.run()
+    print("主进程结束")
+    times = time.time() - begin
+    print(times)

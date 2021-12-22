@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
+import json
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import requests
 from lxml import etree
-import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import time
-from fake_useragent import UserAgent
 
 
 class QiubaiSpider:
     def __init__(self):
-        ua = UserAgent(verify_ssl=False)
         self.url_temp = "https://www.qiushibaike.com/text/page/{}/"
         self.headers = {
-            "User-Agent": ua.random}
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.41 Safari/535.1 QQBrowser/6.9.11079.201"}
 
     # url_list
     def get_url_list(self):
@@ -44,48 +43,34 @@ class QiubaiSpider:
 
     # 保存
     def save_content_list(self, content_list):
-        # for i in content_list:
-        #     print(i)
         file_path = "糗事百科_线程池爬虫.txt"
-        with open(file_path, "a", encoding="utf-8") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             for content in content_list:
                 f.write(json.dumps(content, ensure_ascii=False, indent=2))
                 f.write("\n")
 
     # 实现主要逻辑
     def run(self):
-        # # 1.url_list
-        # url_list = self.get_url_list()
-        # # 2.遍历，发送请求，获取响应
-        # for url in url_list:
-        #     html_str = self.parse_url(url)
-        #     # 3.提取数据
-        #     content_list = self.get_content_list(html_str)
-        #     # 4.保存
-        #     self.save_content_list(content_list)
 
-        with ThreadPoolExecutor(max_workers=8) as t:
-            begin = time.time()
+        with ThreadPoolExecutor(max_workers=10) as t:
             url_list = self.get_url_list()
             html_str_list = []
             for url in url_list:
                 html_str = t.submit(self.parse_url, url)
                 html_str_list.append(html_str)
-            print("解析完毕")
             content_list_list = []
             for future in as_completed(html_str_list):
                 html_str = future.result()
                 content_list = t.submit(self.get_content_list, html_str)
                 content_list_list.append(content_list)
-            print("获取完毕")
             for future in as_completed(content_list_list):
                 content_list = future.result()
                 t.submit(self.save_content_list, content_list)
-            print("保存完毕")
-            times = time.time() - begin
-            print(times)
 
 
 if __name__ == '__main__':
+    begin = time.time()
     qiubai = QiubaiSpider()
     qiubai.run()
+    times = time.time() - begin
+    print(times)

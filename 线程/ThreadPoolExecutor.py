@@ -14,8 +14,11 @@ with ThreadPoolExecutor(max_workers=5) as t:
     # 通过submit函数来提交线程需要执行的函数到线程池中，并返回句柄
     # submit() 不是阻塞的，而是立即返回
     task1 = t.submit(spider, 1)
+    print("执行task1")
     task2 = t.submit(spider, 2)
+    print("执行task2")
     task3 = t.submit(spider, 3)
+    print("执行task3")
 
     # 通过done来判断线程是否完成
     print(f"task1: {task1.done()}")
