@@ -8,10 +8,20 @@
 > 但是由于 GIL 锁存在，python 里一个进程永远只能同一时刻执行一个线程 (拿到 GIL 的线程才能执行)，所以python多线程无法发挥多核并行的优势。
 
 ### 多线程
-- 使用 threading模块中的 Thread 类创建线程，通过
+- 使用 threading 模块中的 Thread 类创建线程，通过
 ```for _ in range(n): t = threading.Thread(target)```来创建多线程对象
 
 ### 线程池
-- multiprocessing.dummy 所提供的 Pool 函数会返回一个 ThreadPool 的实例，该类是 Pool 的子类，它支持所有相同的方法调用但会使用一个工作线程池而非工作进程池
-- 从Python3.2开始，标准库为我们提供了 concurrent.futures 模块，它提供了 ThreadPoolExecutor (线程池)和ProcessPoolExecutor (进程池)两个类。
+- multiprocessing.dummy 所提供的 Pool 函数会返回一个 ThreadPool 的实例，该类是 Pool 的子类，它支持所有相同的方法调用但会使用一个
+  工作线程池而非工作进程池
+- 从Python3.2开始，标准库为我们提供了 concurrent.futures 模块，它提供了 ThreadPoolExecutor (线程池)和ProcessPoolExecutor (进程池)
+  两个类。
+  
+### 多进程
+- multiprocessing 模块提供了一个Process类来代表一个进程对象
+  
+### 进程池
+- multiprocessing 模块的 Pool 类
+- 从Python3.2开始，标准库为我们提供了 concurrent.futures 模块，它提供了 ThreadPoolExecutor (线程池)和ProcessPoolExecutor (进程池)
+  两个类。
 

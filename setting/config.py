@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-MONGO_URI = 'localhost'
-MONGO_DB = 'qiushi'
-MONGO_COLLECTION = 'stalk'
+MONGO_CONNECTION_STRING = 'mongodb://admin:asdf1234@localhost:27017'
 
 MYSQL_HOST = 'localhost'
 MYSQL_DATABASE = 'proxy'

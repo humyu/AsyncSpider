@@ -15,9 +15,9 @@ async def get(url):
 
 
 # 使用with语句
-async def get_w(rul):
+async def get_with(url):
     async with aiohttp.ClientSession() as session:
-        async with await  session.get(rul) as response:
+        async with await  session.get(url) as response:
             result = await response.text()
             return result
 
@@ -25,8 +25,8 @@ async def get_w(rul):
 async def request():
     url = 'http://httpbin.org/get'
     print('Waiting fro ', url)
-    result = await get(url)
-    # result = await get_w(url)
+    # result = await get(url)
+    result = await get_with(url)
     print('Get response from ', url, 'Result:', result)
 
 

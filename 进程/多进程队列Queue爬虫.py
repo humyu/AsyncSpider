@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 multiprocessing 模块的 Process 类 创建子进程
-multiprocessing 模块的 Process 类 作为进程间的通信
+multiprocessing 模块的 Queue 类 作为进程间的通信
 """
 import json
 from multiprocessing import Process, Queue
