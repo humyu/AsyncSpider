@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+multiprocessing 模块的 Queue 类 没有 join() 和 taskdone() 方法，
+如果需要使用，那么使用一般队列 Queue.Queue 或者 multiprocessing 模块的 JoinableQueue 类
+"""
 import os
 import random
 import time
@@ -25,6 +29,18 @@ class QueueDemo:
             value = self.q.get(True)
             print('Get %s from queue.' % value)
 
+    def run(self):
+        pw = Process(target=self.write, args=())
+        pr = Process(target=self.read, args=())
+        # 启动子进程pw，写入:
+        pw.start()
+        # 启动子进程pr，读取:
+        pr.start()
+        # 等待pw结束:
+        pw.join()
+        # pr进程里是死循环，无法等待其结束，只能强行终止:
+        pr.terminate()
+
 
 class PipeDemo:
     def __init__(self):
@@ -43,28 +59,22 @@ class PipeDemo:
             print("rev:", self.pipe[1].recv())
             time.sleep(1)
 
+    def run(self):
+        p1 = Process(target=self.write, args=())
+        p2 = Process(target=self.read, args=())
+        p1.start()
+        p2.start()
+        p1.join()
+        # p2.join()
+        p2.terminate()
+
 
 if __name__ == '__main__':
     # 1.测试 Queue 通信
     # 父进程创建Queue，并传给各个子进程：
     queue_demo = QueueDemo()
-    pw = Process(target=queue_demo.write, args=())
-    pr = Process(target=queue_demo.read, args=())
-    # 启动子进程pw，写入:
-    pw.start()
-    # 启动子进程pr，读取:
-    pr.start()
-    # 等待pw结束:
-    pw.join()
-    # pr进程里是死循环，无法等待其结束，只能强行终止:
-    pr.terminate()
+    queue_demo.run()
 
     # 2.测试 Pipe 通信
     pipe_demo = PipeDemo()
-    p1 = Process(target=pipe_demo.write, args=())
-    p2 = Process(target=pipe_demo.read, args=())
-    p1.start()
-    p2.start()
-    p1.join()
-    # p2.join()
-    p2.terminate()
+    pipe_demo.run()

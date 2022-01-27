@@ -126,11 +126,11 @@ class AsyncSpider:
 
     async def run(self):
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=20, ssl=False))
-        scrape_index_tasks = [asyncio.ensure_future(self.scrape_index(page)) for page in range(1, PAGE_NUMBER + 1)]
+        scrape_index_tasks = [asyncio.create_task(self.scrape_index(page)) for page in range(1, PAGE_NUMBER + 1)]
         detail_urls = await asyncio.gather(*scrape_index_tasks)
         # 判断 detail_urls 是否为 NoneType
         if detail_urls is not None:
-            scrape_detail_tasks = [asyncio.ensure_future(self.scrape_detail(detail_url)) for detail_url in
+            scrape_detail_tasks = [asyncio.create_task(self.scrape_detail(detail_url)) for detail_url in
                                    detail_urls[0]]
             await asyncio.wait(scrape_detail_tasks)
         await self.session.close()
@@ -138,5 +138,4 @@ class AsyncSpider:
 
 if __name__ == '__main__':
     async_spider = AsyncSpider()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(async_spider.run())
+    asyncio.run(async_spider.run())

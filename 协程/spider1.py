@@ -141,19 +141,11 @@ class AsyncSpider:
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=20, ssl=False)) as session:
             # url_list
             url_list = self.get_url_list()
-            # tasks = [asyncio.ensure_future(self.get_content_list(url, session)) for url in url_list]
-            tasks = []  # 多任务列表
-            # 1.创建协程对象
-            for url in url_list:
-                c = self.get_content_list(url, session)
-                # 2.创建任务对象
-                task = asyncio.ensure_future(c)
-                tasks.append(task)
+            tasks = [asyncio.create_task(self.get_content_list(url, session)) for url in url_list]
             await asyncio.wait(tasks)
         print("end")
 
 
 if __name__ == '__main__':
     spider = AsyncSpider()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(spider.main())
+    asyncio.run(spider.main())
