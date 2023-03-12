@@ -24,6 +24,7 @@ proxies = {
 
 
 def parse_url(url):
+    print(f"{os.getpid()} {url}is running")
     try:
         response = requests.get(url, headers=headers, proxies=proxies, timeout=6)
         return url, response.status_code
@@ -34,8 +35,8 @@ def parse_url(url):
 if __name__ == '__main__':
     # 查看 cpu 个数
     print(f"cpu 个数: {os.cpu_count()}")
-    # 最大四个进程
-    p = Pool(4)
+
+    p = Pool()
     urls = [
         'https://www.baidu.com',
         'https://www.sina.com.cn',

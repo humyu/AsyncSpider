@@ -52,7 +52,7 @@ class AsyncSpider:
             'Sec-Fetch-Site': 'same-origin', 'Sec-Fetch-User': '?1', 'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/96.0.4664.45 Safari/537.36'}
-        self.proxy = "http://200.98.114.237:8888"
+        self.proxy = "http://39.98.45.168:8081"
 
     # url_list
     def get_url_list(self):
@@ -67,7 +67,7 @@ class AsyncSpider:
                     result = await response.text()
                     return result
             except Exception as e:
-                print(e)
+                print(f"异常==>{e}")
                 return "disable"
 
     # 提取数据

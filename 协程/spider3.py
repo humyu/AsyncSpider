@@ -6,6 +6,7 @@ import time
 
 import aiofiles
 import aiohttp
+from aiomultiprocess import Pool
 from lxml import etree
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -15,7 +16,7 @@ from setting import config
 
 CONCURRENCY = 5
 
-PAGE_NUMBER = 1
+PAGE_NUMBER = 2
 
 MONGO_DB_NAME = 'books'
 MONGO_COLLECTION_NAME = 'yanqing'
@@ -64,7 +65,7 @@ class AsyncSpider:
                 async with await self.session.get(url, headers=headers, proxy=self.proxy, timeout=10) as response:
                     return await response.text()
             except Exception as e:
-                print(f"异常==>{e}")
+                print(f"请求异常==》{e}")
                 return "disable"
 
     async def scrape_index(self, page):
@@ -73,7 +74,7 @@ class AsyncSpider:
         if html_str == "disable":
             return
         html = etree.HTML(html_str)
-        detail_urls = list()
+        # detail_urls = list()
         # 列表页分组
         div_list = html.xpath("//div[@class='bookslist']/ul/li")
         for div in div_list:
@@ -81,8 +82,9 @@ class AsyncSpider:
             detail_url = div.xpath("./div/h3/a/@href")
             detail_url = detail_url[0] if len(detail_url) > 0 else None
             detail_url = "https://www.dushu.com" + detail_url
-            detail_urls.append(detail_url)
-        return detail_urls
+            # detail_urls.append(detail_url)
+            return detail_url
+        # return detail_urls
 
     async def scrape_detail(self, detail_url):
         # print(f"detail_url:{detail_url}")
@@ -108,9 +110,9 @@ class AsyncSpider:
             "writers": writers,
             "pub": pub
         }
-        return item
         # await self.save_data(item)
         # await self.save_to_file(item)
+        return item
 
     async def save_data(self, data):
         if data:
@@ -121,7 +123,7 @@ class AsyncSpider:
             }, upsert=True)
 
     async def save_to_file(self, data):
-        file_path = "spider2.txt"
+        file_path = "spider3.txt"
         async with aiofiles.open(file_path, "a+", encoding="utf-8") as f:
             await f.write(json.dumps(data, ensure_ascii=False, indent=2))
             await f.write("\n")
@@ -131,15 +133,22 @@ class AsyncSpider:
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=20, ssl=False))
         scrape_index_tasks = [asyncio.create_task(self.scrape_index(page)) for page in range(1, PAGE_NUMBER + 1)]
         detail_urls = await asyncio.gather(*scrape_index_tasks)
-        # 判断 detail_urls 是否为 NoneType
-        if detail_urls is not None:
-            scrape_detail_tasks = [asyncio.create_task(self.scrape_detail(detail_url)) for detail_url in
-                                   detail_urls[0]]
-            items = await asyncio.gather(*scrape_detail_tasks)
-            if items is not None:
-                save_item_tasks = [asyncio.create_task(self.save_to_file(item)) for item in items]
-                await asyncio.wait(save_item_tasks)
-        await self.session.close()
+        # # 判断 detail_urls 是否为 NoneType
+        # if detail_urls is not None:
+        #     scrape_detail_tasks = [asyncio.create_task(self.scrape_detail(detail_url)) for detail_url in
+        #                            detail_urls[0]]
+        #     await asyncio.wait(scrape_detail_tasks)
+        # detail_urls = detail_urls[0]
+        pool = Pool()
+        try:
+            items = await pool.map(self.scrape_detail, detail_urls)
+            print(items)
+        except Exception as e:
+            print(f"异步进程池异常==>{e}")
+        finally:
+            pool.close()
+            await self.session.close()
+
 
 
 if __name__ == '__main__':
